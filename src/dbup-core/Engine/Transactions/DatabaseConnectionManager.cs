@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using DbUp.Engine.Output;
@@ -33,8 +33,9 @@ namespace DbUp.Engine.Transactions
             transactionStrategyFactory = new Dictionary<TransactionMode, Func<ITransactionStrategy>>
             {
                 {TransactionMode.NoTransaction, ()=>new NoTransactionStrategy()},
-                {TransactionMode.SingleTransaction, ()=>new SingleTrasactionStrategy()},
-                {TransactionMode.TransactionPerScript, ()=>new TransactionPerScriptStrategy()}
+                {TransactionMode.SingleTransaction, ()=>new SingleTransactionStrategy()},
+                {TransactionMode.TransactionPerScript, ()=>new TransactionPerScriptStrategy()},
+                {TransactionMode.SingleTransactionAlwaysRollback, ()=>new SingleTransactionAlwaysRollbackStrategy()}
             };
         }
 
@@ -91,7 +92,7 @@ namespace DbUp.Engine.Transactions
         }
 
         /// <summary>
-        /// Executes an action using the specfied transaction mode 
+        /// Executes an action using the specified transaction mode 
         /// </summary>
         /// <param name="action">The action to execute</param>
         public void ExecuteCommandsWithManagedConnection(Action<Func<IDbCommand>> action)
@@ -100,7 +101,7 @@ namespace DbUp.Engine.Transactions
         }
 
         /// <summary>
-        /// Executes an action which has a result using the specfied transaction mode 
+        /// Executes an action which has a result using the specified transaction mode 
         /// </summary>
         /// <param name="actionWithResult">The action to execute</param>
         /// <typeparam name="T">The result type</typeparam>

@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using DbUp.Engine.Output;
 
 namespace DbUp.Engine.Transactions
 {
-    internal class SingleTrasactionStrategy : ITransactionStrategy
+    class SingleTransactionAlwaysRollbackStrategy : ITransactionStrategy
     {
-        private IDbConnection connection;
-        private IDbTransaction transaction;
-        private bool errorOccured;
-        private IUpgradeLog log;
-        private SqlScript[] executedScriptsListBeforeExecution;
-        private List<SqlScript> executedScriptsCollection;
+        IDbConnection connection;
+        IDbTransaction transaction;
+        bool errorOccured;
+        IUpgradeLog log;
+        SqlScript[] executedScriptsListBeforeExecution;
+        List<SqlScript> executedScriptsCollection;
 
         public void Execute(Action<Func<IDbCommand>> action)
         {
@@ -69,16 +69,22 @@ namespace DbUp.Engine.Transactions
         public void Dispose()
         {
             if (!errorOccured)
-                transaction.Commit();
+            {
+                log.WriteInformation("Success! No errors have occured when executing scripts, transaction will be rolled back");
+            }
             else
             {
                 log.WriteWarning("Error occured when executing scripts, transaction will be rolled back");
-                //Restore the executed scripts collection
-                executedScriptsCollection.Clear();
-                executedScriptsCollection.AddRange(executedScriptsListBeforeExecution);
             }
 
-            transaction.Dispose();
+            // Always rollback
+            transaction?.Rollback();
+
+            //Restore the executed scripts collection
+            executedScriptsCollection.Clear();
+            executedScriptsCollection.AddRange(executedScriptsListBeforeExecution);
+
+            transaction?.Dispose();
         }
     }
 }

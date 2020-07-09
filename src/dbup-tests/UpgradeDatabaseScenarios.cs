@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using DbUp.Builder;
 using DbUp.Engine;
@@ -95,6 +94,7 @@ namespace DbUp.Tests
                 .Then(t => t.ThenShouldNotRunAnyScripts())
                 .And(t => t.AndShouldHaveFailedResult())
                 .And(t => t.AndErrorMessageShouldBeLogged())
+                .And(t => t.AndScriptThatErroredIsRecorded())
                 .BDDfy();
         }
 
@@ -108,6 +108,7 @@ namespace DbUp.Tests
                 .Then(t => t.ThenShouldNotRunAnyScripts())
                 .And(t => t.AndShouldHaveFailedResult())
                 .And(t => t.AndErrorMessageShouldBeLogged())
+                .And(t => t.AndScriptThatErroredIsRecorded())
                 .BDDfy();
         }
 
@@ -129,7 +130,7 @@ namespace DbUp.Tests
         void AndTheFourthScriptToRunHasAnError()
         {
             var errorSql = "slect * from Oops";
-            recordingConnection.SetupNonQueryResult(errorSql, () => { throw new TestSqlException(); });
+            recordingConnection.SetupNonQueryResult(errorSql, () => throw new TestSqlException());
             scripts.Add(new SqlScript("ScriptWithError.sql", errorSql));
         }
 
@@ -137,6 +138,11 @@ namespace DbUp.Tests
         {
             scripts.Clear();
             AndTheFourthScriptToRunHasAnError();
+        }
+
+        void AndScriptThatErroredIsRecorded()
+        {
+            upgradeResult.ErrorScript.Name.ShouldContain("ScriptWithError.sql");
         }
 
         void AndShouldLogInformation()
@@ -150,7 +156,7 @@ namespace DbUp.Tests
             // Check both results and journal
             upgradeResult.Scripts
                 .Select(s => s.Name)
-                .ShouldBe(new[] {"Script1.sql", "Script2.sql", "Script3.sql"});
+                .ShouldBe(new[] { "Script1.sql", "Script2.sql", "Script3.sql" });
         }
 
         void ThenShouldNotRunAnyScripts()
